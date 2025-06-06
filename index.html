@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Jump Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #2c3e50;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #34495e;
+            background-color: #87ceeb;
+        }
+        .instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        Use ARROW KEYS or WASD to move and jump!
+    </div>
+    
+    <script src="https://unpkg.com/kaboom@3000.0.1/dist/kaboom.js"></script>
+    <script>
+        // Initialize kaboom
+        kaboom({
+            width: 800,
+            height: 600,
+            background: [135, 206, 235], // sky blue
+        });
+
+        // Game constants
+        const PLAYER_SPEED = 240;
+        const JUMP_FORCE = 800;
+        const GRAVITY = 2400;
+
+        // Load a simple square sprite (we'll use rectangles)
+        loadSprite("player", "data:image/svg+xml;base64," + btoa(`
+            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" fill="#e74c3c"/>
+            </svg>
+        `));
+
+        loadSprite("platform", "data:image/svg+xml;base64," + btoa(`
+            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" fill="#2ecc71"/>
+            </svg>
+        `));
+
+        loadSprite("ground", "data:image/svg+xml;base64," + btoa(`
+            <svg width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" fill="#8b4513"/>
+            </svg>
+        `));
+
+        // Define game scene
+        scene("game", () => {
+            // Set gravity
+            setGravity(GRAVITY);
+
+            // Create ground
+            for (let i = 0; i < 25; i++) {
+                add([
+                    sprite("ground"),
+                    pos(i * 32, height() - 32),
+                    area(),
+                    body({ isStatic: true }),
+                    "ground"
+                ]);
+            }
+
+            // Create platforms
+            const platforms = [
+                { x: 200, y: 450, width: 4 },
+                { x: 400, y: 350, width: 3 },
+                { x: 100, y: 300, width: 3 },
+                { x: 600, y: 280, width: 4 },
+                { x: 300, y: 200, width: 2 },
+                { x: 500, y: 150, width: 3 },
+                { x: 700, y: 400, width: 2 },
+            ];
+
+            platforms.forEach(platform => {
+                for (let i = 0; i < platform.width; i++) {
+                    add([
+                        sprite("platform"),
+                        pos(platform.x + i * 32, platform.y),
+                        area(),
+                        body({ isStatic: true }),
+                        "platform"
+                    ]);
+                }
+            });
+
+            // Create player
+            const player = add([
+                sprite("player"),
+                pos(50, 400),
+                area(),
+                body(),
+                "player"
+            ]);
+
+            // Player movement
+            onKeyDown("left", () => {
+                player.move(-PLAYER_SPEED, 0);
+            });
+
+            onKeyDown("right", () => {
+                player.move(PLAYER_SPEED, 0);
+            });
+
+            onKeyDown("a", () => {
+                player.move(-PLAYER_SPEED, 0);
+            });
+
+            onKeyDown("d", () => {
+                player.move(PLAYER_SPEED, 0);
+            });
+
+            // Jumping
+            onKeyPress("up", () => {
+                if (player.isGrounded()) {
+                    player.jump(JUMP_FORCE);
+                }
+            });
+
+            onKeyPress("w", () => {
+                if (player.isGrounded()) {
+                    player.jump(JUMP_FORCE);
+                }
+            });
+
+            onKeyPress("space", () => {
+                if (player.isGrounded()) {
+                    player.jump(JUMP_FORCE);
+                }
+            });
+
+            // Keep player in bounds
+            player.onUpdate(() => {
+                // Wrap around screen horizontally
+                if (player.pos.x > width()) {
+                    player.pos.x = 0;
+                } else if (player.pos.x < 0) {
+                    player.pos.x = width();
+                }
+
+                // Reset if player falls off screen
+                if (player.pos.y > height() + 100) {
+                    player.pos = vec2(50, 400);
+                }
+            });
+
+            // Camera follows player (optional smooth camera)
+            player.onUpdate(() => {
+                const camX = lerp(camPos().x, player.pos.x, 0.1);
+                const camY = lerp(camPos().y, player.pos.y - 100, 0.1);
+                camPos(camX, camY);
+            });
+
+            // Add some visual feedback
+            add([
+                text("Platform Jumper", { size: 32 }),
+                pos(width() / 2, 50),
+                anchor("center"),
+                color(255, 255, 255),
+                fixed() // UI element that doesn't move with camera
+            ]);
+
+            add([
+                text("Use Arrow Keys or WASD to move and jump!", { size: 16 }),
+                pos(width() / 2, 90),
+                anchor("center"),
+                color(255, 255, 255),
+                fixed()
+            ]);
+
+            // Debug info
+            onUpdate(() => {
+                debug.log("Player position: " + Math.floor(player.pos.x) + ", " + Math.floor(player.pos.y));
+                debug.log("Is grounded: " + player.isGrounded());
+            });
+        });
+
+        // Start the game
+        go("game");
+    </script>
+</body>
+</html> 
