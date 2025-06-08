@@ -4,3 +4,9 @@ Creawte an HTML + JavaScript game using kaboom.js where a player can move left/r
 3333
 4444
 5555
+<<<<<<< Updated upstream
+=======
+6666
+77777
+88888
+>>>>>>> Stashed changes
